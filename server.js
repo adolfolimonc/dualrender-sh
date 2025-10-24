@@ -36,9 +36,15 @@ const upload = multer({
 
 // Serve static files
 app.use(express.static(__dirname));
+app.use(express.static(path.join(__dirname, "public")));
 
 // Body parser
 app.use(express.json());
+
+// Serve index.html for root route
+app.get("/", (req, res) => {
+  res.sendFile(path.join(__dirname, "index.html"));
+});
 
 // ================================
 // HTML Processing Functions
@@ -470,11 +476,16 @@ app.use((error, req, res, next) => {
 });
 
 // ================================
-// Start Server
+// Start Server (or export for Vercel)
 // ================================
 
-app.listen(PORT, () => {
-  console.log(`
+// Export for Vercel serverless functions
+module.exports = app;
+
+// Start server only if not in serverless environment
+if (process.env.NODE_ENV !== "production" || !process.env.VERCEL) {
+  app.listen(PORT, () => {
+    console.log(`
 ╔═══════════════════════════════════════╗
 ║     🚀 DualRender Server Running      ║
 ╠═══════════════════════════════════════╣
@@ -482,4 +493,5 @@ app.listen(PORT, () => {
 ║  URL:  http://localhost:${PORT}          ║
 ╚═══════════════════════════════════════╝
   `);
-});
+  });
+}

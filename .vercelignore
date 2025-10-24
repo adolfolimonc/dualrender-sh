@@ -1,0 +1,8 @@
+node_modules
+.git
+.gitignore
+README.md
+test*.html
+html-to-pdf.cjs
+*.log
+.DS_Store
