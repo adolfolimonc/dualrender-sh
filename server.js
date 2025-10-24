@@ -169,9 +169,25 @@ async function renderToPdfSingle({
   targetWidth,
   pdfWidth,
 }) {
-  const browser = await chromium.launch({ headless: true });
-  let context;
+  let browser = null;
+  let context = null;
+  
   try {
+    console.log("🌐 Launching browser...");
+    browser = await chromium.launch({ 
+      headless: true,
+      args: [
+        '--no-sandbox',
+        '--disable-setuid-sandbox',
+        '--disable-dev-shm-usage',
+        '--disable-accelerated-2d-canvas',
+        '--no-first-run',
+        '--no-zygote',
+        '--disable-gpu'
+      ]
+    });
+    console.log("✅ Browser launched successfully");
+
     if (contextMode.type === "mobile-emulation") {
       const device = devices[contextMode.deviceName] || devices["iPhone 12"];
       context = await browser.newContext({
@@ -187,12 +203,14 @@ async function renderToPdfSingle({
       });
     }
 
+    console.log("📄 Loading HTML file...");
     const page = await context.newPage();
     await page.emulateMedia({ media: "screen" });
     await page.goto("file://" + htmlPath, {
       waitUntil: "load",
       timeout: 30000,
     });
+    console.log("✅ HTML loaded");
 
     const contentHeight = await page.evaluate(() => {
       const body = document.body;
@@ -211,19 +229,23 @@ async function renderToPdfSingle({
     const renderWidth =
       contextMode.type === "mobile-emulation" ? targetWidth : pdfWidth;
 
+    console.log(`📐 Generating PDF (${renderWidth}x${contentHeight}px)...`);
     const pdfBuffer = await page.pdf({
       printBackground: true,
       width: `${renderWidth}px`,
       height: `${contentHeight}px`,
       pageRanges: "1",
     });
+    console.log("✅ PDF generated");
 
     await context.close();
     await browser.close();
     return pdfBuffer;
   } catch (err) {
+    console.error("❌ Browser error:", err.message);
+    console.error("Stack:", err.stack);
     if (context) await context.close().catch(() => {});
-    await browser.close().catch(() => {});
+    if (browser) await browser.close().catch(() => {});
     throw err;
   }
 }
@@ -453,9 +475,12 @@ app.post("/api/convert", upload.single("htmlFile"), async (req, res) => {
     console.log("✅ PDF generated successfully");
   } catch (error) {
     console.error("❌ Error:", error);
+    console.error("Error stack:", error.stack);
     res.status(500).json({
       error: "Failed to convert HTML to PDF",
       message: error.message,
+      stack: process.env.NODE_ENV === "development" ? error.stack : undefined,
+      details: error.toString(),
     });
   }
 });
