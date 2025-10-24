@@ -99,14 +99,16 @@ function buildDoc({
   <meta charset="utf-8">
   ${metaViewport}
   <style>
-    html, body { margin:0; padding:0; background:#ffffff; width:100%; }
-    .page-wrapper { display: flex; justify-content: center; align-items: flex-start; min-height: 100vh; width:100%; }
-    .frame { padding:${gutter}px; box-sizing:border-box; max-width:100%; }
+    * { box-sizing: border-box; }
+    html, body { margin:0; padding:0; background:#ffffff; width:100%; height:auto; }
+    .page-wrapper { width:100%; padding:${gutter}px; }
+    .frame { width:100%; max-width:${viewportWidth}px; margin:0 auto; }
     .header { font-family: Arial, Helvetica, sans-serif; font-size:14px; color:#333; margin-bottom:8px; }
     .content { background:#fff; border:1px solid #e5e5e5; box-shadow:0 1px 2px rgba(0,0,0,.04); }
-    .inner { padding:${innerPad}px; }
-    img { max-width:100%; height:auto; }
-    table { border-collapse: collapse; }
+    .inner { padding:${innerPad}px; overflow-wrap: break-word; word-wrap: break-word; }
+    img { max-width:100%; height:auto; display:block; }
+    table { border-collapse: collapse; width:100%; max-width:100%; }
+    td, th { word-wrap: break-word; }
   </style>
   <style>${headCSS}</style>
   <title>${docTitle} – ${label}</title>
@@ -132,14 +134,16 @@ function buildDoc({
   <meta charset="utf-8">
   ${metaViewport}
   <style>
-    html, body { margin:0; padding:0; background:#ffffff; }
-    .page-wrapper { display: flex; justify-content: center; align-items: flex-start; min-height: 100vh; }
-    .frame { padding:${gutter}px; box-sizing:border-box; width:${viewportWidth}px; }
+    * { box-sizing: border-box; }
+    html, body { margin:0; padding:0; background:#ffffff; height:auto; }
+    .page-wrapper { width:100%; padding:${gutter}px; display:flex; justify-content:center; }
+    .frame { width:${viewportWidth}px; }
     .header { font-family: Arial, Helvetica, sans-serif; font-size:14px; color:#333; margin-bottom:8px; }
     .content { background:#fff; border:1px solid #e5e5e5; box-shadow:0 1px 2px rgba(0,0,0,.04); }
-    .inner { padding:${innerPad}px; }
-    img { max-width:100%; height:auto; }
-    table { border-collapse: collapse; }
+    .inner { padding:${innerPad}px; overflow-wrap: break-word; word-wrap: break-word; }
+    img { max-width:100%; height:auto; display:block; }
+    table { border-collapse: collapse; width:100%; max-width:100%; }
+    td, th { word-wrap: break-word; }
   </style>
   <style>${headCSS}</style>
   <title>${docTitle} – ${label}</title>
@@ -215,15 +219,17 @@ async function renderToPdfSingle({
     const contentHeight = await page.evaluate(() => {
       const body = document.body;
       const html = document.documentElement;
+      const wrapper = document.querySelector(".page-wrapper");
       const h = Math.max(
         body.scrollHeight,
         body.offsetHeight,
-        body.clientHeight,
         html.scrollHeight,
         html.offsetHeight,
-        html.clientHeight
+        wrapper ? wrapper.scrollHeight : 0,
+        wrapper ? wrapper.offsetHeight : 0
       );
-      return Math.ceil(h);
+      // Add small buffer to ensure nothing gets cut
+      return Math.ceil(h) + 10;
     });
 
     const renderWidth =
@@ -262,9 +268,9 @@ async function convertHtmlToPdf(htmlContent, title, options = {}) {
     emulateMobile: options.emulateMobile !== false,
     mobileDevice: options.mobileDevice || "iPhone 12",
     dgutter: options.dgutter || 72,
-    mgutter: options.mgutter || 24,
+    mgutter: options.mgutter || 20,
     dspace: options.dspace || 0,
-    mspace: options.mspace || 12,
+    mspace: options.mspace || 16,
     pdfWidth: 1080,
   };
 
