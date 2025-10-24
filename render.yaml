@@ -5,8 +5,7 @@ services:
     env: node
     buildCommand: |
       npm install
-      npx playwright install-deps chromium
-      npx playwright install chromium
+      node node_modules/playwright/cli.js install --with-deps chromium
     startCommand: npm start
     envVars:
       - key: NODE_ENV
