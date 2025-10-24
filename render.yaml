@@ -1,0 +1,13 @@
+# Render deployment configuration
+services:
+  - type: web
+    name: dualrender
+    env: node
+    buildCommand: npm install && npm run install-browser
+    startCommand: npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD
+        value: "0"
+    plan: free
