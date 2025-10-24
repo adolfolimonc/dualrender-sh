@@ -34,8 +34,11 @@ COPY package*.json ./
 # Install Node dependencies
 RUN npm ci --only=production
 
-# Install Playwright browsers
-RUN npx playwright install chromium
+# Install Playwright browsers with system dependencies
+RUN npx playwright install --with-deps chromium
+
+# Verify installation
+RUN npx playwright install --help
 
 # Copy application files
 COPY . .
@@ -46,6 +49,7 @@ EXPOSE 3000
 # Set environment variables
 ENV NODE_ENV=production
 ENV PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=0
+ENV PLAYWRIGHT_BROWSERS_PATH=/root/.cache/ms-playwright
 
 # Start the application
 CMD ["npm", "start"]
