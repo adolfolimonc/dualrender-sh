@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DualRender - HTML Email to PDF</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+
+<body>
+  <div class="page-container">
+    <!-- Logo -->
+    <header class="logo-header">
+      <div class="logo">
+        <img src="https://framerusercontent.com/images/VO5r1OeEfT8MgLLBvfiDeQwHJBs.svg" alt="Solstice Health Icon"
+          class="logo-icon">
+      </div>
+    </header>
+
+    <!-- Main Content Wrapper -->
+    <main class="main-content">
+      <div class="content-wrapper">
+        <!-- Title -->
+        <h1 class="title">DualRender</h1>
+
+        <!-- Description -->
+        <p class="description">
+          Extract the view of desktop and mobile version<br>
+          out of your HTML email responsive template.
+        </p>
+
+        <!-- Upload Button -->
+        <button class="upload-button" id="uploadButton">
+          <input type="file" id="fileInput" accept=".html,.htm" class="file-input" aria-label="Upload HTML file">
+          <span class="button-text">Upload html file</span>
+        </button>
+
+        <!-- Footer Note -->
+        <p class="footer-note">
+          • Your template MUST be responsive for this tool to work.
+        </p>
+      </div>
+    </main>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+
+</html>
