@@ -373,9 +373,21 @@ body {
   font-size: var(--font-size-description);
   font-weight: var(--font-weight-regular);
   color: var(--color-dark);
-  margin: 0 0 var(--spacing-lg) 0;
+  margin: 0 0 var(--spacing-sm) 0;
   text-align: center;
   opacity: 0.8;
+}
+
+.modal-filename {
+  font-size: 14px;
+  font-weight: var(--font-weight-bold);
+  color: var(--color-dark);
+  margin: 0 0 var(--spacing-lg) 0;
+  text-align: center;
+  padding: var(--spacing-xs) var(--spacing-md);
+  background: rgba(28, 28, 30, 0.05);
+  border-radius: var(--border-radius-sm);
+  word-break: break-word;
 }
 
 .modal-input {

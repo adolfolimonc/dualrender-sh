@@ -88,7 +88,7 @@ function updateButtonState(state, message = "") {
     case "processing":
       uploadButton.classList.add("processing");
       uploadButton.disabled = true;
-      buttonText.textContent = "Processing...";
+      buttonText.textContent = message || "Processing...";
       break;
 
     case "success":
@@ -137,6 +137,95 @@ function showNotification(message, type = "info") {
 // ================================
 // File Processing Functions
 // ================================
+
+/**
+ * Process multiple files in batch
+ * @param {File[]} files - Array of HTML files to process
+ */
+async function processBatchFiles(files) {
+  if (files.length === 0) return;
+
+  const totalFiles = files.length;
+  let successCount = 0;
+  let errorCount = 0;
+
+  console.log(`Starting batch processing of ${totalFiles} file(s)`);
+
+  for (let i = 0; i < files.length; i++) {
+    const file = files[i];
+    const fileNumber = i + 1;
+
+    try {
+      // Update button to show progress
+      updateButtonState(
+        "processing",
+        `Processing ${fileNumber}/${totalFiles}...`
+      );
+
+      // Validate file
+      const validation = validateFile(file);
+      if (!validation.success) {
+        throw new Error(validation.message);
+      }
+
+      // Prompt user for title for each file
+      const title = await promptForTitle(file.name, fileNumber, totalFiles);
+      if (!title) {
+        // User cancelled, abort batch
+        updateButtonState("idle");
+        showNotification("Batch processing cancelled", "error");
+        return;
+      }
+
+      console.log(`[${fileNumber}/${totalFiles}] Processing: ${file.name}`);
+
+      // Send to server for conversion
+      const pdfBlob = await sendToServer(file, title);
+
+      // Download the PDF
+      downloadPDF(pdfBlob, title);
+
+      successCount++;
+      console.log(`[${fileNumber}/${totalFiles}] Success: ${title}`);
+
+      // Small delay between downloads to prevent browser blocking
+      if (i < files.length - 1) {
+        await new Promise((resolve) => setTimeout(resolve, 500));
+      }
+    } catch (error) {
+      errorCount++;
+      console.error(
+        `[${fileNumber}/${totalFiles}] Error processing ${file.name}:`,
+        error
+      );
+      showNotification(
+        `Error processing ${file.name}: ${error.message}`,
+        "error"
+      );
+    }
+  }
+
+  // Show final result
+  if (errorCount === 0) {
+    updateButtonState(
+      "success",
+      `${successCount} PDF${successCount > 1 ? "s" : ""} Generated!`
+    );
+    showNotification(
+      `Successfully created ${successCount} PDF${successCount > 1 ? "s" : ""}`,
+      "success"
+    );
+  } else if (successCount > 0) {
+    updateButtonState("success", `${successCount} of ${totalFiles} completed`);
+    showNotification(
+      `Completed ${successCount} of ${totalFiles} files. ${errorCount} failed.`,
+      "error"
+    );
+  } else {
+    updateButtonState("error", "All files failed");
+    showNotification("Failed to process files", "error");
+  }
+}
 
 /**
  * Process the uploaded HTML file
@@ -216,7 +305,8 @@ function createFallbackModal() {
   modal.innerHTML = `
     <div class="modal-content">
       <h2 class="modal-title">Enter PDF Title</h2>
-      <p class="modal-description">This title will appear on both pages of your PDF</p>
+      <p class="modal-description" id="modalDescription">This title will appear on both pages of your PDF</p>
+      <p class="modal-filename" id="modalFilename"></p>
       <input 
         type="text" 
         id="titleInput" 
@@ -238,13 +328,27 @@ function createFallbackModal() {
 /**
  * Prompt user for PDF title
  * @param {string} filename - Original filename for suggestion
+ * @param {number} fileNumber - Current file number (optional)
+ * @param {number} totalFiles - Total number of files (optional)
  * @returns {Promise<string|null>} - Title or null if cancelled
  */
-async function promptForTitle(filename) {
+async function promptForTitle(filename, fileNumber = null, totalFiles = null) {
   return new Promise(async (resolve) => {
     // Load modal from external HTML file
     const modal = await loadModalHTML();
     document.body.appendChild(modal);
+
+    // Update description for batch processing
+    const descriptionEl = modal.querySelector("#modalDescription");
+    const filenameEl = modal.querySelector("#modalFilename");
+    
+    if (fileNumber && totalFiles) {
+      descriptionEl.textContent = `File ${fileNumber} of ${totalFiles} - Enter a title for this PDF`;
+      filenameEl.textContent = `Processing: ${filename}`;
+    } else {
+      descriptionEl.textContent = "This title will appear on both pages of your PDF";
+      filenameEl.textContent = `File: ${filename}`;
+    }
 
     // Set suggested title
     const suggestedTitle = filename.replace(/\.(html|htm)$/i, "");
@@ -348,11 +452,11 @@ function downloadPDF(blob, title) {
  * Handle file input change
  * @param {Event} event - Change event
  */
-function handleFileChange(event) {
-  const file = event.target.files[0];
+async function handleFileChange(event) {
+  const files = Array.from(event.target.files);
 
-  if (file) {
-    processHTMLFile(file);
+  if (files.length > 0) {
+    await processBatchFiles(files);
   }
 
   // Reset input to allow selecting the same file again
@@ -413,10 +517,10 @@ function preventDefaults(e) {
 
 function handleDrop(e) {
   const dt = e.dataTransfer;
-  const files = dt.files;
+  const files = Array.from(dt.files);
 
   if (files.length > 0) {
-    processHTMLFile(files[0]);
+    processBatchFiles(files);
   }
 }
 

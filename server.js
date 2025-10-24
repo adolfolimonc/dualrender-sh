@@ -99,16 +99,37 @@ function buildDoc({
   <meta charset="utf-8">
   ${metaViewport}
   <style>
-    * { box-sizing: border-box; }
+    * { box-sizing: border-box !important; }
     html, body { margin:0; padding:0; background:#ffffff; width:100%; height:auto; }
     .page-wrapper { width:100%; padding:${gutter}px; }
     .frame { width:100%; max-width:${viewportWidth}px; margin:0 auto; }
-    .header { font-family: Arial, Helvetica, sans-serif; font-size:14px; color:#333; margin-bottom:8px; }
     .content { background:#fff; border:1px solid #e5e5e5; box-shadow:0 1px 2px rgba(0,0,0,.04); }
     .inner { padding:${innerPad}px; overflow-wrap: break-word; word-wrap: break-word; }
-    img { max-width:100%; height:auto; display:block; }
-    table { border-collapse: collapse; width:100%; max-width:100%; }
-    td, th { word-wrap: break-word; }
+    
+    /* Aggressive mobile-responsive overrides */
+    table { 
+      border-collapse: collapse !important; 
+      width: 100% !important; 
+      max-width: 100% !important; 
+      min-width: auto !important;
+      table-layout: auto !important;
+    }
+    td, th { 
+      word-wrap: break-word !important; 
+      overflow-wrap: break-word !important;
+      word-break: break-word !important;
+      max-width: 100% !important;
+    }
+    img { 
+      max-width: 100% !important; 
+      height: auto !important; 
+      display: block !important;
+      width: auto !important;
+    }
+    /* Ensure no horizontal overflow */
+    .inner * {
+      max-width: 100% !important;
+    }
   </style>
   <style>${headCSS}</style>
   <title>${docTitle} – ${label}</title>
@@ -116,7 +137,6 @@ function buildDoc({
 <body>
   <div class="page-wrapper">
     <div class="frame" data-label="${label}">
-      <div class="header">${docTitle} — <strong>${label}</strong></div>
       <div class="content">
         <div class="inner" id="email-root">
           ${bodyHTML}
@@ -138,20 +158,17 @@ function buildDoc({
     html, body { margin:0; padding:0; background:#ffffff; height:auto; }
     .page-wrapper { width:100%; padding:${gutter}px; display:flex; justify-content:center; }
     .frame { width:${viewportWidth}px; }
-    .header { font-family: Arial, Helvetica, sans-serif; font-size:14px; color:#333; margin-bottom:8px; }
     .content { background:#fff; border:1px solid #e5e5e5; box-shadow:0 1px 2px rgba(0,0,0,.04); }
     .inner { padding:${innerPad}px; overflow-wrap: break-word; word-wrap: break-word; }
     img { max-width:100%; height:auto; display:block; }
-    table { border-collapse: collapse; width:100%; max-width:100%; }
+    table { border-collapse: collapse; max-width:100%; }
     td, th { word-wrap: break-word; }
   </style>
   <style>${headCSS}</style>
-  <title>${docTitle} – ${label}</title>
 </head>
 <body>
   <div class="page-wrapper">
     <div class="frame" data-label="${label}">
-      <div class="header">${docTitle} — <strong>${label}</strong></div>
       <div class="content">
         <div class="inner" id="email-root">
           ${bodyHTML}
@@ -177,7 +194,7 @@ async function renderToPdfSingle({
   let context = null;
 
   try {
-    console.log("🌐 Launching browser...");
+    console.log("Launching browser...");
     browser = await chromium.launch({
       headless: true,
       args: [
@@ -190,7 +207,7 @@ async function renderToPdfSingle({
         "--disable-gpu",
       ],
     });
-    console.log("✅ Browser launched successfully");
+    console.log("Browser launched successfully");
 
     if (contextMode.type === "mobile-emulation") {
       const device = devices[contextMode.deviceName] || devices["iPhone 12"];
@@ -207,14 +224,14 @@ async function renderToPdfSingle({
       });
     }
 
-    console.log("📄 Loading HTML file...");
+    console.log("Loading HTML file...");
     const page = await context.newPage();
     await page.emulateMedia({ media: "screen" });
     await page.goto("file://" + htmlPath, {
       waitUntil: "load",
       timeout: 30000,
     });
-    console.log("✅ HTML loaded");
+    console.log("HTML loaded");
 
     const contentHeight = await page.evaluate(() => {
       const body = document.body;
@@ -235,20 +252,20 @@ async function renderToPdfSingle({
     const renderWidth =
       contextMode.type === "mobile-emulation" ? targetWidth : pdfWidth;
 
-    console.log(`📐 Generating PDF (${renderWidth}x${contentHeight}px)...`);
+    console.log(`Generating PDF (${renderWidth}x${contentHeight}px)...`);
     const pdfBuffer = await page.pdf({
       printBackground: true,
       width: `${renderWidth}px`,
       height: `${contentHeight}px`,
       pageRanges: "1",
     });
-    console.log("✅ PDF generated");
+    console.log("PDF generated");
 
     await context.close();
     await browser.close();
     return pdfBuffer;
   } catch (err) {
-    console.error("❌ Browser error:", err.message);
+    console.error("Browser error:", err.message);
     console.error("Stack:", err.stack);
     if (context) await context.close().catch(() => {});
     if (browser) await browser.close().catch(() => {});
@@ -277,32 +294,32 @@ async function convertHtmlToPdf(htmlContent, title, options = {}) {
   let tmpDir;
   try {
     // Extract HTML components
-    console.log("📋 Extracting HTML components...");
+    console.log("Extracting HTML components...");
     const headCSS = extractHeadStyles(htmlContent);
     const docTitle = opts.title || extractTitle(htmlContent) || "HTML Preview";
     const bodyHTML = extractBody(htmlContent);
 
     // Create temp directory with error handling
-    console.log("📁 Creating temp directory...");
+    console.log("Creating temp directory...");
     try {
       tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), "html2pdf-"));
-      console.log(`✅ Temp dir created: ${tmpDir}`);
+      console.log(`Temp dir created: ${tmpDir}`);
     } catch (err) {
-      console.error("❌ Failed to create temp dir:", err.message);
+      console.error("Failed to create temp dir:", err.message);
       // Fallback to /tmp if os.tmpdir() fails
       tmpDir = fs.mkdtempSync(path.join("/tmp", "html2pdf-"));
-      console.log(`✅ Using fallback temp dir: ${tmpDir}`);
+      console.log(`Using fallback temp dir: ${tmpDir}`);
     }
 
     const desktopHTMLPath = path.join(tmpDir, "desktop.html");
     const mobileHTMLPath = path.join(tmpDir, "mobile.html");
 
     // Write temp HTML files
-    console.log("✍️  Writing temp HTML files...");
+    console.log("Writing temp HTML files...");
     fs.writeFileSync(
       desktopHTMLPath,
       buildDoc({
-        label: "Desktop",
+        label: "DESKTOP",
         viewportWidth: opts.desktop,
         gutter: opts.dgutter,
         innerPad: opts.dspace,
@@ -316,7 +333,7 @@ async function convertHtmlToPdf(htmlContent, title, options = {}) {
     fs.writeFileSync(
       mobileHTMLPath,
       buildDoc({
-        label: "Mobile",
+        label: "MOBILE",
         viewportWidth: opts.mobile,
         gutter: opts.mgutter,
         innerPad: opts.mspace,
@@ -328,10 +345,10 @@ async function convertHtmlToPdf(htmlContent, title, options = {}) {
         docTitle,
       })
     );
-    console.log("✅ Temp HTML files written");
+    console.log("Temp HTML files written");
 
     // Render PDFs
-    console.log("🖥️  Rendering desktop view...");
+    console.log("Rendering desktop view...");
     const desktopBuf = await renderToPdfSingle({
       htmlPath: desktopHTMLPath,
       contextMode: { type: "viewport" },
@@ -339,7 +356,7 @@ async function convertHtmlToPdf(htmlContent, title, options = {}) {
       pdfWidth: opts.pdfWidth,
     });
 
-    console.log("📱 Rendering mobile view...");
+    console.log("Rendering mobile view...");
     const mobileBuf = await renderToPdfSingle({
       htmlPath: mobileHTMLPath,
       contextMode: opts.emulateMobile
@@ -350,10 +367,14 @@ async function convertHtmlToPdf(htmlContent, title, options = {}) {
     });
 
     // Merge PDFs
-    console.log("🔗 Merging PDFs...");
+    console.log("Merging PDFs...");
     const outDoc = await PDFDocument.create();
     const dDoc = await PDFDocument.load(desktopBuf);
     const mDoc = await PDFDocument.load(mobileBuf);
+
+    // Load font for text width calculation
+    const font = await outDoc.embedFont("Helvetica");
+    const boldFont = await outDoc.embedFont("Helvetica-Bold");
 
     const verticalPadding = 300;
 
@@ -377,24 +398,38 @@ async function convertHtmlToPdf(htmlContent, title, options = {}) {
       });
 
       if (opts.title) {
-        const titleFontSize = 64;
-        const subtitleFontSize = 32;
+        const titleFontSize = 32;
+        const subtitleFontSize = 16;
+        const lineSpacing = subtitleFontSize * 1.5;
+
+        // Calculate title position (centered)
+        const titleWidth = font.widthOfTextAtSize(opts.title, titleFontSize);
+        const titleX = (opts.pdfWidth - titleWidth) / 2;
         const titleY =
           desktopHeight + verticalPadding + verticalPadding / 2 + 20;
-        const subtitleY = titleY - 50;
+
+        // Calculate subtitle position (centered, below title with line spacing)
+        const subtitle = "DESKTOP";
+        const subtitleWidth = boldFont.widthOfTextAtSize(
+          subtitle,
+          subtitleFontSize
+        );
+        const subtitleX = (opts.pdfWidth - subtitleWidth) / 2;
+        const subtitleY = titleY - lineSpacing - 10;
 
         newDesktopPage.drawText(opts.title, {
-          x: opts.pdfWidth / 2 - opts.title.length * titleFontSize * 0.3,
+          x: titleX,
           y: titleY,
           size: titleFontSize,
+          font: font,
           color: { type: "RGB", red: 0, green: 0, blue: 0 },
         });
 
-        const subtitle = "Desktop";
         newDesktopPage.drawText(subtitle, {
-          x: opts.pdfWidth / 2 - subtitle.length * subtitleFontSize * 0.3,
+          x: subtitleX,
           y: subtitleY,
           size: subtitleFontSize,
+          font: boldFont,
           color: { type: "RGB", red: 0.4, green: 0.4, blue: 0.4 },
         });
       }
@@ -423,24 +458,38 @@ async function convertHtmlToPdf(htmlContent, title, options = {}) {
       });
 
       if (opts.title) {
-        const titleFontSize = 64;
-        const subtitleFontSize = 32;
+        const titleFontSize = 32;
+        const subtitleFontSize = 16;
+        const lineSpacing = subtitleFontSize * 1.5;
+
+        // Calculate title position (centered)
+        const titleWidth = font.widthOfTextAtSize(opts.title, titleFontSize);
+        const titleX = (opts.pdfWidth - titleWidth) / 2;
         const titleY =
           mobileHeight + verticalPadding + verticalPadding / 2 + 20;
-        const subtitleY = titleY - 50;
+
+        // Calculate subtitle position (centered, below title with line spacing)
+        const subtitle = "MOBILE";
+        const subtitleWidth = boldFont.widthOfTextAtSize(
+          subtitle,
+          subtitleFontSize
+        );
+        const subtitleX = (opts.pdfWidth - subtitleWidth) / 2;
+        const subtitleY = titleY - lineSpacing - 10;
 
         newMobilePage.drawText(opts.title, {
-          x: opts.pdfWidth / 2 - opts.title.length * titleFontSize * 0.3,
+          x: titleX,
           y: titleY,
           size: titleFontSize,
+          font: font,
           color: { type: "RGB", red: 0, green: 0, blue: 0 },
         });
 
-        const subtitle = "Mobile";
         newMobilePage.drawText(subtitle, {
-          x: opts.pdfWidth / 2 - subtitle.length * subtitleFontSize * 0.3,
+          x: subtitleX,
           y: subtitleY,
           size: subtitleFontSize,
+          font: boldFont,
           color: { type: "RGB", red: 0.4, green: 0.4, blue: 0.4 },
         });
       }
@@ -475,8 +524,8 @@ app.post("/api/convert", upload.single("htmlFile"), async (req, res) => {
     const title = req.body.title || "HTML Preview";
     const htmlContent = req.file.buffer.toString("utf-8");
 
-    console.log(`📄 Processing: ${req.file.originalname}`);
-    console.log(`📝 Title: ${title}`);
+    console.log(`Processing: ${req.file.originalname}`);
+    console.log(`Title: ${title}`);
 
     const pdfBytes = await convertHtmlToPdf(htmlContent, title);
 
@@ -491,9 +540,9 @@ app.post("/api/convert", upload.single("htmlFile"), async (req, res) => {
 
     res.send(Buffer.from(pdfBytes));
 
-    console.log("✅ PDF generated successfully");
+    console.log("PDF generated successfully");
   } catch (error) {
-    console.error("❌ Error:", error);
+    console.error("Error:", error);
     console.error("Error stack:", error.stack);
     res.status(500).json({
       error: "Failed to convert HTML to PDF",
@@ -531,7 +580,7 @@ if (process.env.NODE_ENV !== "production" || !process.env.VERCEL) {
   app.listen(PORT, () => {
     console.log(`
 ╔═══════════════════════════════════════╗
-║     🚀 DualRender Server Running      ║
+║     DualRender Server Running         ║
 ╠═══════════════════════════════════════╣
 ║  Port: ${PORT}                           ║
 ║  URL:  http://localhost:${PORT}          ║
