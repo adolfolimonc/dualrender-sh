@@ -171,20 +171,20 @@ async function renderToPdfSingle({
 }) {
   let browser = null;
   let context = null;
-  
+
   try {
     console.log("🌐 Launching browser...");
-    browser = await chromium.launch({ 
+    browser = await chromium.launch({
       headless: true,
       args: [
-        '--no-sandbox',
-        '--disable-setuid-sandbox',
-        '--disable-dev-shm-usage',
-        '--disable-accelerated-2d-canvas',
-        '--no-first-run',
-        '--no-zygote',
-        '--disable-gpu'
-      ]
+        "--no-sandbox",
+        "--disable-setuid-sandbox",
+        "--disable-dev-shm-usage",
+        "--disable-accelerated-2d-canvas",
+        "--no-first-run",
+        "--no-zygote",
+        "--disable-gpu",
+      ],
     });
     console.log("✅ Browser launched successfully");
 
@@ -268,19 +268,31 @@ async function convertHtmlToPdf(htmlContent, title, options = {}) {
     pdfWidth: 1080,
   };
 
-  // Extract HTML components
-  const headCSS = extractHeadStyles(htmlContent);
-  const docTitle = opts.title || extractTitle(htmlContent) || "HTML Preview";
-  const bodyHTML = extractBody(htmlContent);
-
-  // Create temp directory
-  const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), "html2pdf-"));
-
+  let tmpDir;
   try {
+    // Extract HTML components
+    console.log("📋 Extracting HTML components...");
+    const headCSS = extractHeadStyles(htmlContent);
+    const docTitle = opts.title || extractTitle(htmlContent) || "HTML Preview";
+    const bodyHTML = extractBody(htmlContent);
+
+    // Create temp directory with error handling
+    console.log("📁 Creating temp directory...");
+    try {
+      tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), "html2pdf-"));
+      console.log(`✅ Temp dir created: ${tmpDir}`);
+    } catch (err) {
+      console.error("❌ Failed to create temp dir:", err.message);
+      // Fallback to /tmp if os.tmpdir() fails
+      tmpDir = fs.mkdtempSync(path.join("/tmp", "html2pdf-"));
+      console.log(`✅ Using fallback temp dir: ${tmpDir}`);
+    }
+
     const desktopHTMLPath = path.join(tmpDir, "desktop.html");
     const mobileHTMLPath = path.join(tmpDir, "mobile.html");
 
     // Write temp HTML files
+    console.log("✍️  Writing temp HTML files...");
     fs.writeFileSync(
       desktopHTMLPath,
       buildDoc({
@@ -310,6 +322,7 @@ async function convertHtmlToPdf(htmlContent, title, options = {}) {
         docTitle,
       })
     );
+    console.log("✅ Temp HTML files written");
 
     // Render PDFs
     console.log("🖥️  Rendering desktop view...");
