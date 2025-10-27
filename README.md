@@ -57,9 +57,6 @@ http://localhost:3000
 5. Wait for processing (you'll see "Processing..." on the button)
 6. PDF will automatically download when ready!
 
-> Example responsive templates are available in the `examples/` directory if you need sample inputs for testing.
-
-
 ## File Structure
 
 ```text
@@ -78,7 +75,6 @@ email-to-pdf/
 |     |- utils/             # HTML parsing and template builders
 |     |- middleware/        # Multer upload configuration
 |     \- config/            # Rendering defaults
-|- examples/               # Sample responsive templates
 |- package.json
 |- package-lock.json
 |- Dockerfile
@@ -241,10 +237,3 @@ Built with:
 - [Multer](https://github.com/expressjs/multer) - File upload handling
 
 Design by Solstice Health
-
-
-
-
-
-
-
