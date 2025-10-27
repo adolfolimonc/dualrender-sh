@@ -4,13 +4,13 @@ Convert responsive HTML email templates into PDF with separate Desktop and Mobil
 
 ## Features
 
-- 📧 **Dual View PDF** - Generates Desktop and Mobile versions in one PDF
-- 🎨 **Responsive Design** - Beautiful, centered UI matching Figma design
-- 🖼️ **Custom Titles** - Add custom titles to your PDF pages
-- 📱 **Device Emulation** - Uses real device emulation for accurate mobile rendering
-- ⚡ **Fast Processing** - Powered by Playwright and pdf-lib
-- 🎯 **Auto-sizing** - Dynamically fits content height
-- 💾 **Auto-download** - PDF downloads automatically after generation
+- **Dual View PDF** - Generates Desktop and Mobile versions in one PDF
+- **Responsive Design** - Beautiful, centered UI matching Figma design
+- **Custom Titles** - Add custom titles to your PDF pages
+- **Device Emulation** - Uses real device emulation for accurate mobile rendering
+- **Fast Processing** - Powered by Playwright and pdf-lib
+- **Auto-sizing** - Dynamically fits content height
+- **Auto-download** - PDF downloads automatically after generation
 
 ## Prerequisites
 
@@ -50,24 +50,39 @@ http://localhost:3000
 
 ### 3. Convert HTML to PDF
 
-1. Click the **"Upload html file"** button
+1. Click the **"Upload HTML files"** button
 2. Select your responsive HTML email template
 3. Enter a title for your PDF when prompted
 4. Click **"Generate PDF"**
 5. Wait for processing (you'll see "Processing..." on the button)
 6. PDF will automatically download when ready!
 
+> Example responsive templates are available in the `examples/` directory if you need sample inputs for testing.
+
+
 ## File Structure
 
-```
+```text
 email-to-pdf/
-├── index.html          # Front-end UI
-├── styles.css          # Styling with CSS variables
-├── script.js           # Client-side JavaScript
-├── server.js           # Express server + PDF conversion logic
-├── html-to-pdf.cjs     # Original CLI tool (reference)
-├── package.json        # Dependencies
-└── assets/             # Logo and assets
+|- public/
+|  |- assets/               # Static images and icons
+|  |- scripts/              # Client-side ES modules
+|  |- styles/               # Stylesheets
+|  |- index.html            # Front-end entry point
+|  \- modal.html            # Title prompt markup
+|- src/
+|  \- server/
+|     |- app.js             # Express bootstrap & static hosting
+|     |- routes/            # API route handlers
+|     |- services/          # Playwright + pdf-lib orchestration
+|     |- utils/             # HTML parsing and template builders
+|     |- middleware/        # Multer upload configuration
+|     \- config/            # Rendering defaults
+|- examples/               # Sample responsive templates
+|- package.json
+|- package-lock.json
+|- Dockerfile
+\- render.yaml
 ```
 
 ## Configuration
@@ -83,16 +98,16 @@ The server uses these default settings for PDF generation:
   emulateMobile: true,    // Use device emulation
   mobileDevice: "iPhone 12", // Device to emulate
   dgutter: 72,            // Desktop gutter (px)
-  mgutter: 24,            // Mobile gutter (px)
+  mgutter: 20,            // Mobile gutter (px)
   dspace: 0,              // Desktop inner padding (px)
-  mspace: 12,             // Mobile inner padding (px)
+  mspace: 16,             // Mobile inner padding (px)
   pdfWidth: 1080          // Fixed PDF page width (px)
 }
 ```
 
 ### Customizing Settings
 
-To modify these settings, edit the `convertHtmlToPdf` function in `server.js`.
+To modify these settings, edit the `DEFAULT_RENDER_CONFIG` in `src/server/config/defaults.js`.
 
 ## Development
 
@@ -149,10 +164,10 @@ Health check endpoint.
 
 Your HTML email template **MUST be responsive** for this tool to work correctly:
 
-- ✅ Use media queries (`@media` rules)
-- ✅ Include `<style>` tags in the `<head>`
-- ✅ Use responsive units (%, vw, max-width, etc.)
-- ✅ Test on both desktop and mobile viewports
+- Use media queries (`@media` rules)
+- Include `<style>` tags in the `<head>`
+- Use responsive units (%, vw, max-width, etc.)
+- Test on both desktop and mobile viewports
 
 **Example responsive template structure:**
 
@@ -199,7 +214,7 @@ Your HTML email template **MUST be responsive** for this tool to work correctly:
 
 ### Issue: Port 3000 already in use
 
-**Solution:** Change the port in `server.js`:
+**Solution:** Change the port in `src/server/app.js`:
 
 ```javascript
 const PORT = process.env.PORT || 3001; // Change to 3001 or any available port
@@ -207,10 +222,10 @@ const PORT = process.env.PORT || 3001; // Change to 3001 or any available port
 
 ## Browser Support
 
-- ✅ Chrome/Edge (latest)
-- ✅ Firefox (latest)
-- ✅ Safari (latest)
-- ✅ Opera (latest)
+- Chrome/Edge (latest)
+- Firefox (latest)
+- Safari (latest)
+- Opera (latest)
 
 ## License
 
@@ -226,3 +241,10 @@ Built with:
 - [Multer](https://github.com/expressjs/multer) - File upload handling
 
 Design by Solstice Health
+
+
+
+
+
+
+
